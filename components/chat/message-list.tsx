@@ -23,7 +23,7 @@ type Props = {
   regenerate:unknown;
 };
 
-export default function ChatList({ messages,regenerate }: Props) {
+export default function MessageList({ messages,regenerate }: Props) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-scroll on new message

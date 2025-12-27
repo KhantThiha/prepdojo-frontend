@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 
-export default function Home() {
+export default function ChatPage() {
   return (
     <SidebarProvider>
                 <AppSidebar />
