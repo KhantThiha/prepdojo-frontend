@@ -90,52 +90,6 @@ const models = [
 interface ChatInterfaceProps {
   chatId: string;
 }
-import type { UIMessage } from 'ai'
-
-function hydrateMessages(rows: any[]): UIMessage[] {
-  return rows.map(row => {
-    const parts: UIMessage['parts'] = []
-
-    if (row.content) {
-      parts.push({
-        type: 'text',
-        text: row.content,
-      })
-    }
-
-    if (row.metadata?.files) {
-      for (const file of row.metadata.files) {
-        parts.push({
-          type: 'file',
-          data: file,
-        })
-      }
-    }
-
-    if (row.metadata?.reasoning) {
-      parts.push({
-        type: 'reasoning',
-        text: row.metadata.reasoning,
-      })
-    }
-
-    if (row.metadata?.sources) {
-      for (const source of row.metadata.sources) {
-        parts.push({
-          type: 'source',
-          source,
-        })
-      }
-    }
-
-    return {
-      id: row.id,
-      role: row.role,
-      parts,
-    }
-  })
-}
-
 
 export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     const [activeChatId, setActiveChatId] = useState<string>(chatId)
@@ -159,9 +113,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     const hasAttachments = Boolean(message.files?.length)
     if (!(hasText || hasAttachments)) return
 
-  const chatIdToUse = await createChatIfNeeded()
-  if (!chatIdToUse) return
-
+    const chatIdToUse = await createChatIfNeeded()
+    if (!chatIdToUse) return;
+    
   sendMessage(
     {
       text: message.text || 'Sent with attachments',
@@ -169,39 +123,32 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     },
     {
       body: {
-        chatId: 123,
+        chatId: chatIdToUse,
         model,
         level,
         userId: user?.id,
       },
     }
   )
-  //setIsChatStarted(true)
   setText('')
 }
 
-  useEffect(() => {
-  if (!activeChatId || !user) return
-
-  const hydrate = async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('chat_id', activeChatId)
-      .order('created_at', { ascending: true })
-
-    if (!data || data.length === 0) {
-      setMessages([])
-      setIsChatStarted(false)
-      return
-    }
-
-    setMessages(hydrateMessages(data))
-    setIsChatStarted(true)
-  }
-
-  hydrate()
-}, [activeChatId, setMessages, supabase, user])
+function getSimpleTitle(text: string): string {
+  if (!text) return "New Chat";
+  
+  // 1. Trim whitespace
+  const trimmed = text.trim();
+  
+  // 2. If it's very short, return it
+  if (trimmed.length <= 40) return trimmed;
+  
+  // 3. Split into words and take first 6 words (looks cleaner than character count)
+  const words = trimmed.split(/\s+/);
+  const title = words.slice(0, 6).join(" ");
+  
+  // 4. Add ellipsis if we cut it off
+  return title + "...";
+}
 async function createChatIfNeeded(): Promise<string> {
   if (activeChatId) return activeChatId
   if (!user || creatingChat) return ''
@@ -213,6 +160,8 @@ async function createChatIfNeeded(): Promise<string> {
     .insert({
       user_id: user.id,
       message_count: 0,
+      model_used:model,
+      title:getSimpleTitle(text)
     })
     .select('id')
     .single()

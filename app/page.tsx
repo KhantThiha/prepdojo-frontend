@@ -4,11 +4,13 @@ import {
     SidebarProvider,
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { SidebarWrapper } from "@/components/sidebar/sidebar-wrapper";
 
 export default function Home() {
   return (
     <SidebarProvider>
-                <AppSidebar />
+                {/* <AppSidebar /> */}
+                <SidebarWrapper/>
         <SidebarInset>
         <ChatInterface/>
         </SidebarInset>
