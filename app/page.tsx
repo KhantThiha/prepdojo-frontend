@@ -12,7 +12,7 @@ export default function Home() {
                 {/* <AppSidebar /> */}
                 <SidebarWrapper/>
         <SidebarInset>
-        <ChatInterface/>
+        <ChatInterface chatId=""/>
         </SidebarInset>
         </SidebarProvider>
   );

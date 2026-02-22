@@ -35,7 +35,7 @@ import {
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { MicIcon, GlobeIcon, CheckIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatList from "@/components/chat/message-list";
 import { useChat } from '@ai-sdk/react';
 import {
@@ -49,8 +49,18 @@ import {
 } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth-context";
 import { createClient } from "@/lib/supabase/client";
+import { getChatHistory } from "@/app/actions/get-chat-history";
+import { TopicSelector } from "../ai-elements/topic-selector";
 
 const models = [
+  
+  {
+    id: "openai/gpt-oss-120b",
+    name: "gpt-oss-120b",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
+  },
   {
     id: "openai/gpt-oss-20b",
     name: "gpt-oss-20b",
@@ -59,40 +69,58 @@ const models = [
     providers: ["openai", "azure"],
   },
   {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
+    id: "openai/gpt-oss-safeguard-20b",
+    name: "gpt-oss-safeguard-20b",
     chef: "OpenAI",
     chefSlug: "openai",
     providers: ["openai", "azure"],
   },
   {
-    id: "claude-opus-4-20250514",
-    name: "Claude 4 Opus",
-    chef: "Anthropic",
-    chefSlug: "anthropic",
-    providers: ["anthropic", "azure", "google", "amazon-bedrock"],
+    id: "qwen/qwen3-32b",
+    name: "qwen3-32b",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
   },
   {
-    id: "claude-sonnet-4-20250514",
-    name: "Claude 4 Sonnet",
-    chef: "Anthropic",
-    chefSlug: "anthropic",
-    providers: ["anthropic", "azure", "google", "amazon-bedrock"],
+    id: "llama-3.3-70b-versatile",
+    name: "llama-3.3-70b-versatile",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
+  },{
+    id: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    name: "llama-4-maverick-17b-128e-instruct",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
+  },{
+    id: "meta-llama/llama-guard-4-12b",
+    name: "llama-guard-4-12b",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
+  },{
+    id: "allam-2-7b",
+    name: "allam-2-7b",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
   },
   {
-    id: "gemini-2.0-flash-exp",
-    name: "Gemini 2.0 Flash",
-    chef: "Google",
-    chefSlug: "google",
-    providers: ["google"],
+    id: "gpt-4o",
+    name: "gpt-4o",
+    chef: "OpenAI",
+    chefSlug: "openai",
+    providers: ["openai", "azure"],
   },
 ];
 interface ChatInterfaceProps {
   chatId: string;
 }
 
-export default function ChatInterface({ chatId }: ChatInterfaceProps) {
-    const [activeChatId, setActiveChatId] = useState<string>(chatId)
+export default function ChatInterface({ chatId }: ChatInterfaceProps) {  
+  const [activeChatId, setActiveChatId] = useState<string>(chatId)
     const [creatingChat, setCreatingChat] = useState(false)
     const { user } = useAuth();
     const supabase = createClient();
@@ -103,11 +131,43 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
     const selectedModelData = models.find((m) => m.id === model);
     const [level, setLevel] = useState<string>("N5");
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const [isChatStarted, setIsChatStarted] = useState(false);
     
-    
-    const {messages, sendMessage, status, regenerate,setMessages } = useChat();
+    // Use setMessages to load history
+    const {messages, sendMessage, status, regenerate, setMessages} = useChat();
+    const [selectedTopics, setSelectedTopics] = useState<string | null>(null);
+    // NEW: Effect to load history when chatId changes
+    useEffect(() => {
+      const loadHistory = async () => {
+        if (chatId) {
+          // If a chatId exists in the URL, we are entering an existing chat
+          setActiveChatId(chatId);
+          setIsChatStarted(true); // Show chat UI immediately
+          
+          // Fetch history
+          try {
+            const history = await getChatHistory(chatId);
+            console.log(history)
+            if (history.length > 0) {
+                // Load messages into useChat state
+                setMessages(history);
+            }
+          } catch (error) {
+            console.error("Failed to load chat history", error);
+          }
+        } else {
+          // New Chat: Clear state
+          setMessages([]);
+          setActiveChatId('');
+          setIsChatStarted(false);
+        }
+      };
+
+      loadHistory();
+    }, [chatId]); // Re-run when chatId changes
+
     const handleSubmit = async (message: PromptInputMessage) => {
     const hasText = Boolean(message.text)
     const hasAttachments = Boolean(message.files?.length)
@@ -116,37 +176,34 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     const chatIdToUse = await createChatIfNeeded()
     if (!chatIdToUse) return;
     
-  sendMessage(
-    {
-      text: message.text || 'Sent with attachments',
-      files: message.files,
-    },
-    {
-      body: {
-        chatId: chatIdToUse,
-        model,
-        level,
-        userId: user?.id,
+    sendMessage(
+      {
+        text: message.text || 'Sent with attachments',
+        files: message.files,
       },
-    }
-  )
-  setText('')
+      {
+        body: {
+          chatId: chatIdToUse,
+          model,
+          level,
+          userId: user?.id,
+          topic:selectedTopics,
+        },
+      }
+    )
+    setText('')
 }
 
 function getSimpleTitle(text: string): string {
   if (!text) return "New Chat";
   
-  // 1. Trim whitespace
   const trimmed = text.trim();
   
-  // 2. If it's very short, return it
   if (trimmed.length <= 40) return trimmed;
   
-  // 3. Split into words and take first 6 words (looks cleaner than character count)
   const words = trimmed.split(/\s+/);
   const title = words.slice(0, 6).join(" ");
   
-  // 4. Add ellipsis if we cut it off
   return title + "...";
 }
 async function createChatIfNeeded(): Promise<string> {
@@ -229,8 +286,7 @@ async function createChatIfNeeded(): Promise<string> {
                   <ChatList messages={messages} regenerate={regenerate}></ChatList>  
               </div> 
             )}
-            <div className="w-full flex-none px-32 mb-8">
-
+            <div className="w-full flex-none px-32 mb-8 gap-4 grid">   
                   <PromptInput globalDrop multiple onSubmit={handleSubmit}>
                 <PromptInputHeader>
                 <PromptInputAttachments>
@@ -239,6 +295,7 @@ async function createChatIfNeeded(): Promise<string> {
                     </PromptInputHeader>
                     <PromptInputBody>
                     <PromptInputTextarea
+                        ref={textareaRef}
                         onChange={(event) => setText(event.target.value)}
                         value={text}
                     />
@@ -320,6 +377,10 @@ async function createChatIfNeeded(): Promise<string> {
             </ModelSelectorList>
             </ModelSelectorContent>
             </ModelSelector>
+            <TopicSelector 
+              selectedTopics={selectedTopics} 
+              onChange={setSelectedTopics} 
+            />
             </PromptInputTools>
             <PromptInputSubmit
             disabled={!(text.trim() || status) || status === "streaming"}
@@ -331,6 +392,5 @@ async function createChatIfNeeded(): Promise<string> {
                 </div>
             </div>
             </>
-        )
-    }
-    
+    )
+}

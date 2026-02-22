@@ -2,6 +2,7 @@
 import { AppSidebar } from "./app-sidebar"
 import { useEffect, useState } from "react";
 import { getUserChats } from "@/app/actions/get-chats";
+import { usePathname } from "next/navigation";
 
 export function SidebarWrapper() {
   const [allChats, setAllChats] = useState<any[]>([])
@@ -42,11 +43,17 @@ export function SidebarWrapper() {
       setIsLoading(false)
     }
   }
+  const pathname = usePathname()
+  
+  // Logic to extract chatId from URL
+  // It matches patterns like "/chat/abc-123-def"
+  const currentChatId = pathname.split("/").pop() || "";
+  
   useEffect(() => {
       loadMoreChats()
   }, [])
 
   // 2. Pass Data to Client Component
   return <AppSidebar histories={allChats} onLoadMore={loadMoreChats}
-  hasMore={hasMore} isLoading={isLoading} />
+  hasMore={hasMore} isLoading={isLoading} currentChatId={currentChatId}/>
 }
