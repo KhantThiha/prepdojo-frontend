@@ -20,7 +20,7 @@ const generateQuizTool = tool({
 
 export async function POST(req: Request) {
   try {
-    const { messages, level, model, userId, chatId,topic } = await req.json()
+    const { messages, level, model, userId, chatId, topic, accessToken } = await req.json()
 
     if (!chatId) {
       console.error("Error: chatId is missing from request body");
@@ -32,19 +32,21 @@ export async function POST(req: Request) {
       name: 'model-name',
       apiKey: 'hello', // Not used for local, but required by SDK
       baseURL: 'http://127.0.0.1:8000/api/v1', // Ensure this points to your Python
-      headers: { 
+      headers: {
+        'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         'X-Level': level,
         'X-Chat-Id': chatId,
         'X-User-Id': userId,
         'X-Topic': topic,
-       }
+        'X-Custom-Header': process.env.NEXT_PUBLIC_X_CUSTOM_HEADER || '',
+      }
     })
 
     // 5. Stream Response
     const result = streamText({
       model: provider.languageModel(model),
       messages: convertToModelMessages(messages),
-      
+
       // 2. Pass the tools here so streamText recognizes them
       tools: {
         generate_quiz: generateQuizTool
