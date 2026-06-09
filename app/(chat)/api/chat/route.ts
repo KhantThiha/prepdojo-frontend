@@ -7,7 +7,7 @@ export const maxDuration = 30
 // 1. Define the tool schema for the Frontend/SDK
 const generateQuizTool = tool({
   description: 'Generates a multiple-choice question for the user.',
-  parameters: z.object({
+  inputSchema: z.object({
     question: z.string(),
     options: z.array(z.string()),
     correct_index: z.number(),
