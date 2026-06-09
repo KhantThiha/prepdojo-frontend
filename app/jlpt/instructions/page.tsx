@@ -21,7 +21,7 @@ import {
   Settings,
   Wifi,
   Headphones,
-  Chromium,
+  GlobeCheck,
   BatteryFull,
   AlertTriangle,
   ArrowLeft,
@@ -210,7 +210,7 @@ export default function InstructionsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <Chromium className="text-slate-400 size-5" />
+                        <GlobeCheck className="text-slate-400 size-5" />
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Browser</p>
                           <p className="text-sm font-bold">Chrome/Edge</p>
