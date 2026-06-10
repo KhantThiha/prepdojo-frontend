@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const provider = createOpenAICompatible({
       name: 'model-name',
       apiKey: 'hello', // Not used for local, but required by SDK
-      baseURL: 'http://127.0.0.1:8000/api/v1', // Ensure this points to your Python
+      baseURL: `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/v1`,
       headers: {
         'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         'X-Level': level,

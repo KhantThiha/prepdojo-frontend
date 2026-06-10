@@ -9,7 +9,8 @@ export async function fetchAndFilterExamQuestions(
     level: JLPTLevel,
     config: ExamConfig
 ): Promise<Question[]> {
-    const res = await fetch(`/api/v1/exam/random`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    const res = await fetch(`${apiUrl}/api/v1/exam/random`, {
         headers: {
             'X-Custom-Header': process.env.NEXT_PUBLIC_X_CUSTOM_HEADER || '',
         },
