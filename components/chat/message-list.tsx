@@ -24,11 +24,7 @@ export default function ChatList({ messages, regenerate }: Props) {
       <Conversation>
         <ConversationContent>
           {messages.map((message, messageIndex) => {
-            // 1. Ensure parts exist (Fallback)
-            const hasParts = message.parts && message.parts.length > 0;
-            const parts = hasParts 
-              ? message.parts 
-              : (message.content ? [{ type: 'text' as const, text: message.content }] : []);
+            const parts = message.parts ?? [];
             
             return (
               <Fragment key={message.id}>

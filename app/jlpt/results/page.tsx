@@ -67,6 +67,8 @@ export default function ResultsPage() {
   }, [result.percentage]);
 
   const recommendation = useMemo(() => {
+    if (result.groupResults.length === 0) return "Start an exam to receive personalized recommendations.";
+
     const sortedGroups = [...result.groupResults].sort((a, b) => (a.scaledScore / a.maxScaled) - (b.scaledScore / b.maxScaled));
     const weakest = sortedGroups[0];
 
@@ -74,7 +76,7 @@ export default function ResultsPage() {
       return "Fantastic performance! Your grasp of the material is exceptional. To stay sharp, we recommend tackling advanced literature and high-level audio materials.";
     }
 
-    return `Great effort! Your ${weakest.name} skills could use some reinforcement. We recommend focusing on targeted practice in this area to improve your overall balance and score in future attempts.`;
+    return `Great effort! Your ${weakest!.name} skills could use some reinforcement. We recommend focusing on targeted practice in this area to improve your overall balance and score in future attempts.`;
   }, [result]);
 
   const handleRetake = () => {

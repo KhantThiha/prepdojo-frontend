@@ -19,7 +19,7 @@ export function ChatHistory({ onChatSelect, className = '' }: ChatHistoryProps) 
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [user, authLoading] = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
 
   // Load chats when user is available or from localStorage
@@ -112,7 +112,7 @@ export function ChatHistory({ onChatSelect, className = '' }: ChatHistoryProps) 
       if (!user) {
         const savedChats = JSON.parse(localStorage.getItem('chatHistory') || '[]');
         localStorage.setItem('chatHistory', JSON.stringify(
-          savedChats.filter(chat => chat.id !== chatId)
+          savedChats.filter((chat: any) => chat.id !== chatId)
         ));
       }
     } catch (error) {

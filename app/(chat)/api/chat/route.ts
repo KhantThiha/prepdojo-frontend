@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     // 5. Stream Response
     const result = streamText({
       model: provider.languageModel(model),
-      messages: convertToModelMessages(messages),
+      messages: await convertToModelMessages(messages),
 
       // 2. Pass the tools here so streamText recognizes them
       tools: {
